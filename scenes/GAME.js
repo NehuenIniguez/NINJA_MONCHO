@@ -13,8 +13,13 @@ export default class GAME extends Phaser.Scene {
   preload() {
     //.. para volver
     this.load.image("cielo", "./public/assets/Cielo.webp")
+    this.load.image("cuadrado", "./public/assets/square.png")
+    this.load.image("diamante", "./public/assets/diamond.png")
+    this.load.image("triangulo", "./public/assets/triangle.png")
     this.load.image("plataforma", "./public/assets/platform.png")
     this.load.image("personaje", "./public/assets/Ninja.png")
+    
+
   }
 
   create() {
@@ -36,25 +41,58 @@ export default class GAME extends Phaser.Scene {
 
 
    this.cursor=this.input.keyboard.createCursorKeys()
-   
   
-
-
    //this.w=this.input.keyboard.addkey(phaser.input.keyboard.keycode.w); si quiero una sola
 
- }
+   //evento 1 seg
+
+ 
+    //crear recolectables
+this.recolectables= this.physics.add.group();
+//this.physics.add.collider(this.personaje, this.recolectables)
+this.physics.add.collider(this.personaje,this.recolectables, this.pj, null,this )
+this.physics.add.overlap(this.recolectables,this.plataformas, this.floor, null, this )
+      
+    this.time.addEvent({
+      delay: 1000,
+      callback: this.onSecond,
+      callbackScope: this,
+      loop: true,
+    });
+  
+    
+    
+    
+  
+  }
+onSecond() {
+    const tipos = ["triangulo", "cuadrado", "diamante"];
+    const tipo = Phaser.Math.RND.pick(tipos);
+    let recolectable = this.recolectables.create(
+      Phaser.Math.Between(15, 785),
+      0,
+      tipo
+      
+    ).setScale(1).refreshBody();
+    
+  recolectable.setVelocity(0,100)
+  this.physics.add.collider(recolectable, this.recolectables)
+ 
+    }
+  
 
   update() {
    if (this.cursor.left.isDown) {
     this.personaje.setVelocityX(-160)
    } else if (this.cursor.right.isDown) {
     this.personaje.setVelocityX(160)
-  
   } else this.personaje.setVelocityX(0) 
 
-  if (this.cursor.up.isDown){
-    this.personaje.setVelocityY(-260)
+  if (this.cursor.up.isDown && this.personaje.body.touching.down){
+    this.personaje.setVelocityY(-330)
   }  
+ 
+
   //else this.personaje.setVelocityY(0)
   
   //  }
