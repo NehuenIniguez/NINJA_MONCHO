@@ -32,14 +32,16 @@ export default class GAME extends Phaser.Scene {
 
    this.plataformas.create(400,568, "plataforma").setScale(2).refreshBody();
    
-    
+    //personaje
    this.personaje= this.physics.add.sprite(400,300, "personaje")
    this.personaje.setScale(0.1)
    this.personaje.setCollideWorldBounds(true)
+
+   //colision personaje-plataforma
    this.physics.add.collider(this.personaje, this.plataformas) 
    //this.personaje.setGravityY(10000)
 
-
+//teclas
    this.cursor=this.input.keyboard.createCursorKeys()
   
    //this.w=this.input.keyboard.addkey(phaser.input.keyboard.keycode.w); si quiero una sola
@@ -48,10 +50,10 @@ export default class GAME extends Phaser.Scene {
 
  
     //crear recolectables
-this.recolectables= this.physics.add.group();
-//this.physics.add.collider(this.personaje, this.recolectables)
-this.physics.add.collider(this.personaje,this.recolectables, this.pj, null,this )
-this.physics.add.overlap(this.recolectables,this.plataformas, this.floor, null, this )
+    this.recolectables= this.physics.add.group();
+    this.physics.add.collider(this.personaje, this.recolectables)
+    this.physics.add.collider(this.personaje,this.recolectables, this.pj, null,this )
+    this.physics.add.overlap(this.recolectables,this.plataformas, this.floor, null, this )
       
     this.time.addEvent({
       delay: 1000,
@@ -59,13 +61,24 @@ this.physics.add.overlap(this.recolectables,this.plataformas, this.floor, null, 
       callbackScope: this,
       loop: true,
     });
-  
-    
-    
-    
-  
   }
-onSecond() {
+
+  // recoleccion de objeto
+  
+  pj( _personaje,recolectables) {
+    recolectables.destroy();
+  }
+    
+  //destruccion de objeto
+
+  floor(recolectables,_plataformas){
+    recolectables.disableBody(true,true)
+    //recolectables.destroy()
+  }
+    
+    
+    
+  onSecond() {
     const tipos = ["triangulo", "cuadrado", "diamante"];
     const tipo = Phaser.Math.RND.pick(tipos);
     let recolectable = this.recolectables.create(
@@ -77,11 +90,13 @@ onSecond() {
     
   recolectable.setVelocity(0,100)
   this.physics.add.collider(recolectable, this.recolectables)
+  
  
     }
   
 
   update() {
+   
    if (this.cursor.left.isDown) {
     this.personaje.setVelocityX(-160)
    } else if (this.cursor.right.isDown) {
@@ -89,13 +104,9 @@ onSecond() {
   } else this.personaje.setVelocityX(0) 
 
   if (this.cursor.up.isDown && this.personaje.body.touching.down){
-    this.personaje.setVelocityY(-330)
+    this.personaje.setVelocityY(-330);
+     
+  }
   }  
- 
-
-  //else this.personaje.setVelocityY(0)
   
-  //  }
-  
-}
 }
