@@ -6,7 +6,15 @@ export default class GAME extends Phaser.Scene {
   }
 
   init() {
-
+    //timer y game over
+    this.gameOver = false;
+    this.timer = 6;
+    this.score = 0;
+    this.shapes = {
+      "triangulo": { points: 10, count: 0 },
+      "cuadrado": { points: 20, count: 0 },
+      "diamante": {points: 30, count: 0 }
+    }
   }
    
 
@@ -18,8 +26,6 @@ export default class GAME extends Phaser.Scene {
     this.load.image("triangulo", "./public/assets/triangle.png")
     this.load.image("plataforma", "./public/assets/platform.png")
     this.load.image("personaje", "./public/assets/Ninja.png")
-    
-
   }
 
   create() {
@@ -46,11 +52,25 @@ export default class GAME extends Phaser.Scene {
   
    //this.w=this.input.keyboard.addkey(phaser.input.keyboard.keycode.w); si quiero una sola
 
+   
+   //agregar r
+    this.r = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
    //evento 1 seg
+    this.time.addEvent({
+      delay: 1000,
+      callback: this.HandlerTimer,
+      callbackScope: this,
+      loop: true,
+    });
 
+    //se agrega timer en la esquina superior 
+    this.timerText = this.add.text(10,10, `tiempo restante: ${this.timer}`,{
+      fontSize: "32px",
+      fill: "#fff"
+    })
  
     //crear recolectables
-    this.recolectables= this.physics.add.group();
+    this.recolectables = this.physics.add.group();
     this.physics.add.collider(this.personaje, this.recolectables)
     this.physics.add.collider(this.personaje,this.recolectables, this.pj, null,this )
     this.physics.add.overlap(this.recolectables,this.plataformas, this.floor, null, this )
@@ -61,24 +81,38 @@ export default class GAME extends Phaser.Scene {
       callbackScope: this,
       loop: true,
     });
+    
+    
   }
+  
 
   // recoleccion de objeto
   
-  pj( _personaje,recolectables) {
-    recolectables.destroy();
+  pj( _personaje,recolectable) {
+    recolectable.destroy();
   }
     
   //destruccion de objeto
 
-  floor(recolectables,_plataformas){
-    recolectables.disableBody(true,true)
+  floor(recolectable,_plataformas){
+    recolectable.destroy(true,true)
     //recolectables.destroy()
   }
     
-    
-    
+  //timer
+  HandlerTimer(){
+    this.timer-=1;
+    this.timerText.setText(`tiempo restante: ${this.timer}`);
+    if (this.timer===0){
+      this.gameOver=true
+    }
+  }
+
+  //timer de objetos
   onSecond() {
+    if (this.gameOver){
+      return;
+    }
     const tipos = ["triangulo", "cuadrado", "diamante"];
     const tipo = Phaser.Math.RND.pick(tipos);
     let recolectable = this.recolectables.create(
@@ -88,25 +122,30 @@ export default class GAME extends Phaser.Scene {
       
     ).setScale(1).refreshBody();
     
-  recolectable.setVelocity(0,100)
-  this.physics.add.collider(recolectable, this.recolectables)
-  
- 
+   recolectable.setVelocity(0,100)
+   this.physics.add.collider(recolectable, this.recolectables)
     }
   
 
   update() {
-   
-   if (this.cursor.left.isDown) {
-    this.personaje.setVelocityX(-160)
-   } else if (this.cursor.right.isDown) {
-    this.personaje.setVelocityX(160)
-  } else this.personaje.setVelocityX(0) 
+    if(this.gameOver && this.r.isDown){
+      console.log("reincia")
+      this.scene.restart();
+      }
+      if(this.gameOver){
+        this.physics.pause();
+        this.timerText.setText("Game Over");
+        return;
+      }
+      if (this.cursor.left.isDown) {
+      this.personaje.setVelocityX(-160)
+      } else if (this.cursor.right.isDown) {
+      this.personaje.setVelocityX(160)
+    } else this.personaje.setVelocityX(0) 
 
-  if (this.cursor.up.isDown && this.personaje.body.touching.down){
-    this.personaje.setVelocityY(-330);
-     
-  }
+    if (this.cursor.up.isDown && this.personaje.body.touching.down){
+      this.personaje.setVelocityY(-330); 
+    }
   }  
   
 }
