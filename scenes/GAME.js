@@ -2,18 +2,18 @@
 
 export default class GAME extends Phaser.Scene {
   constructor() {
-    super("main");
+    super("GAME");
   }
 
   init() {
     //timer y game over
     this.gameOver = false;
-    this.timer = 6;
+    this.timer = 30;
     this.score = 0;
     this.shapes = {
       "triangulo": { points: 10, count: 0 },
       "cuadrado": { points: 20, count: 0 },
-      "diamante": {points: 30, count: 0 }
+      "diamante": {points: 30, count: 0 },
     }
   }
    
@@ -74,6 +74,11 @@ export default class GAME extends Phaser.Scene {
     this.physics.add.collider(this.personaje, this.recolectables)
     this.physics.add.collider(this.personaje,this.recolectables, this.pj, null,this )
     this.physics.add.overlap(this.recolectables,this.plataformas, this.floor, null, this )
+   
+    // agregar el score arriba
+
+    this.scoreText = this.add.text(10, 50, `puntaje: ${this.score} / T: ${this.shapes["triangulo"].count} / C: ${this.shapes["cuadrado"].count} / D: ${this.shapes["diamante"].count}`)
+
       
     this.time.addEvent({
       delay: 1000,
@@ -81,21 +86,73 @@ export default class GAME extends Phaser.Scene {
       callbackScope: this,
       loop: true,
     });
-    
+
+    //puntaje ¿?
+ //  this.scoreText = this.add.text(
+ //   10,
+ //   50,
+ //   `puntaje: ${this.score}
+ //     T: ${this.shapes["triangulo"].count}
+ //     C: ${this.shapes["cuadrado"].count}
+ //     R: ${this.shapes["diamante"].count}`
+ // );
+
+   const cumplePuntos = this.score >= 100;
+    const cumpleFiguras =
+      this.shapes["triangulo"].count >= 2 &&
+      this.shapes["cuadrado"].count >= 2 &&
+      this.shapes["diamante"].count >= 2;
+
+    if (cumplePuntos % cumpleFiguras) {
+      console.log("Ganaste");
+      this.scene.start("end", {
+        score: this.score,
+        gameOver: this.gameOver
+      })}
+
     
   }
   
 
   // recoleccion de objeto
   
-  pj( _personaje,recolectable) {
-    recolectable.destroy();
+  pj( _personaje,recolectables) {
+    const nombreFig = recolectables.texture.key;
+    const puntosFig = this.shapes[nombreFig].points;
+    this.score += puntosFig;
+    this.shapes [nombreFig].count += 1;
+    console.table(this.shapes);
+    console.log("score", this.score);
+    recolectables.destroy();
+
+    this.scoreText.setText(
+      `puntaje: ${this.score} / T: ${this.shapes["triangulo"].count} / C: ${this.shapes["cuadrado"].count} / D: ${this.shapes["diamante"].count}`
+    )
+     
+    this.checkWin();
+  }
+
+
+  checkWin(){
+    const cumplePuntos = this.score >= 100;
+    const cumpleFiguras = 
+    this.shapes["triangulo"].count >= 2 &&
+    this.shapes["cuadrado"].count >= 2 &&
+    this.shapes["diamante"].count >= 2;
+
+    if (cumplePuntos && cumpleFiguras) {
+      console.log("Ganaste");
+      this.scene.start("end",{
+        score: this.score,
+        gameOver: this.gameOver,
+      })
+     }
   }
     
   //destruccion de objeto
 
-  floor(recolectable,_plataformas){
-    recolectable.destroy(true,true)
+  floor(recolectables, _plataformas){
+    recolectables.destroy(true,true)
     //recolectables.destroy()
   }
     
@@ -105,7 +162,13 @@ export default class GAME extends Phaser.Scene {
     this.timerText.setText(`tiempo restante: ${this.timer}`);
     if (this.timer===0){
       this.gameOver=true
-    }
+      this.gameOver = true;
+      this.scene.start("end",{
+        score: this.score,
+        gameOver: this.gameOver,
+      })
+    } 
+   
   }
 
   //timer de objetos
@@ -125,27 +188,28 @@ export default class GAME extends Phaser.Scene {
    recolectable.setVelocity(0,100)
    this.physics.add.collider(recolectable, this.recolectables)
     }
-  
-
+   
   update() {
-    if(this.gameOver && this.r.isDown){
-      console.log("reincia")
-      this.scene.restart();
-      }
-      if(this.gameOver){
-        this.physics.pause();
-        this.timerText.setText("Game Over");
-        return;
-      }
-      if (this.cursor.left.isDown) {
+    if (this.cursor.left.isDown) {
       this.personaje.setVelocityX(-160)
-      } else if (this.cursor.right.isDown) {
+    } else if (this.cursor.right.isDown) {
       this.personaje.setVelocityX(160)
     } else this.personaje.setVelocityX(0) 
 
     if (this.cursor.up.isDown && this.personaje.body.touching.down){
       this.personaje.setVelocityY(-330); 
     }
+    if( this.r.isDown){
+      console.log("reincia")
+      this.scene.restart(`GAME`);
+      
+    }
+    if(this.gameOver){
+        this.physics.pause();
+        this.timerText.setText("Game Over");
+        return;
+    }
+
   }  
   
 }
