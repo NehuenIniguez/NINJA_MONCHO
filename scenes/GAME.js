@@ -11,10 +11,13 @@ export default class GAME extends Phaser.Scene {
     this.timer = 30;
     this.score = 0;
     this.shapes = {
-      "triangulo": { points: 10, count: 0 },
-      "cuadrado": { points: 20, count: 0 },
-      "diamante": {points: 30, count: 0 },
+      triangulo: {points: 10, count: 0 },
+      cuadrado: {points: 20, count: 0 },
+      diamante: {points: 30, count: 0 },
     }
+     // Agregar una propiedad para contar los rebotes
+   // this.recolectables.reboundCount = 0;
+    //this.maxRebounds = 5; // Número máximo de rebotes antes de destruir la bola
   }
    
 
@@ -71,31 +74,29 @@ export default class GAME extends Phaser.Scene {
  
     //crear recolectables
     this.recolectables = this.physics.add.group();
-    this.physics.add.collider(this.personaje, this.recolectables)
-    this.physics.add.collider(this.personaje,this.recolectables, this.pj, null,this )
-    this.physics.add.overlap(this.recolectables,this.plataformas, this.floor, null, this )
-   
+    this.physics.add.collider(this.recolectables, this.plataformas);
+    this.physics.add.collider(this.personaje,this.recolectables, this.pj, null,this);
+    //this.physics.add.collider(this.recolectables,this.plataformas, this.floor, null, this )
+
+    //this.recolectables.setBounce(1)
+    //if (this.recolectables.isTouching.down){
+    //  this.plataformas.setVelocityY(-330)
+    //  score=socer-1
+    //}
+
+    
     // agregar el score arriba
 
     this.scoreText = this.add.text(10, 50, `puntaje: ${this.score} / T: ${this.shapes["triangulo"].count} / C: ${this.shapes["cuadrado"].count} / D: ${this.shapes["diamante"].count}`)
 
-      
+      //velocidad de caida de objetos
     this.time.addEvent({
-      delay: 1000,
+      delay: 700,
       callback: this.onSecond,
       callbackScope: this,
       loop: true,
     });
 
-    //puntaje ¿?
- //  this.scoreText = this.add.text(
- //   10,
- //   50,
- //   `puntaje: ${this.score}
- //     T: ${this.shapes["triangulo"].count}
- //     C: ${this.shapes["cuadrado"].count}
- //     R: ${this.shapes["diamante"].count}`
- // );
 
    const cumplePuntos = this.score >= 100;
     const cumpleFiguras =
@@ -116,11 +117,14 @@ export default class GAME extends Phaser.Scene {
 
   // recoleccion de objeto
   
-  pj( _personaje,recolectables) {
+  pj( personaje,recolectables) {
     const nombreFig = recolectables.texture.key;
     const puntosFig = this.shapes[nombreFig].points;
     this.score += puntosFig;
     this.shapes [nombreFig].count += 1;
+    
+    const points= recolectables.getData("points")
+    
     console.table(this.shapes);
     console.log("score", this.score);
     recolectables.destroy();
@@ -149,12 +153,15 @@ export default class GAME extends Phaser.Scene {
      }
   }
     
+  
   //destruccion de objeto
 
-  floor(recolectables, _plataformas){
-    recolectables.destroy(true,true)
-    //recolectables.destroy()
-  }
+  //floor(recolectables, plataformas){
+   //recolectables.destroy(true,true)
+  //  
+  //      }
+    
+  
     
   //timer
   HandlerTimer(){
@@ -178,17 +185,32 @@ export default class GAME extends Phaser.Scene {
     }
     const tipos = ["triangulo", "cuadrado", "diamante"];
     const tipo = Phaser.Math.RND.pick(tipos);
-    let recolectable = this.recolectables.create(
-      Phaser.Math.Between(15, 785),
+    let recolectables = this.recolectables.create(
+      Phaser.Math.Between(10, 790),
       0,
       tipo
-      
-    ).setScale(1).refreshBody();
-    
-   recolectable.setVelocity(0,100)
-   this.physics.add.collider(recolectable, this.recolectables)
+    );
+    recolectables.setVelocity(0,100);
+  
+    //rebote
+    const rebote= Phaser.Math.FloatBetween(0.4, 0.8);
+    recolectables.setBounce(rebote);
+
+    //set data
+    recolectables.setData(`points`,this.shapes[tipo].points);
+    recolectables.setData("tipo",tipo);
     }
+   onRecolectableBounced(recolectables, plataformas){
+    let points = recolectables.getData(`points`);
+    points -= 5;
+    recolectables.setData("points", points)
+    if (points <= 0) {
+      recolectables.destroy()
+    }
+    
+   }
    
+
   update() {
     if (this.cursor.left.isDown) {
       this.personaje.setVelocityX(-160)
@@ -209,7 +231,7 @@ export default class GAME extends Phaser.Scene {
         this.timerText.setText("Game Over");
         return;
     }
-
+    
   }  
   
 }
