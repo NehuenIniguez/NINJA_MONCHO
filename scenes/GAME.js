@@ -40,6 +40,7 @@ export default class GAME extends Phaser.Scene {
    //this.plataforma.setScale(2)
 
    this.plataformas.create(400,568, "plataforma").setScale(2).refreshBody();
+   this.plataformas.create(200, 400, "plataforma");
    
     //personaje
    this.personaje= this.physics.add.sprite(400,300, "personaje")
@@ -74,9 +75,9 @@ export default class GAME extends Phaser.Scene {
  
     //crear recolectables
     this.recolectables = this.physics.add.group();
-    this.physics.add.collider(this.recolectables, this.plataformas);
+    //this.physics.add.collider(this.recolectables, this.plataformas);
     this.physics.add.collider(this.personaje,this.recolectables, this.pj, null,this);
-    //this.physics.add.collider(this.recolectables,this.plataformas, this.floor, null, this )
+    this.physics.add.collider(this.recolectables,this.plataformas, this.onRecolectableBounced, null, this )
 
     //this.recolectables.setBounce(1)
     //if (this.recolectables.isTouching.down){
@@ -117,20 +118,25 @@ export default class GAME extends Phaser.Scene {
 
   // recoleccion de objeto
   
-  pj( personaje,recolectables) {
-    const nombreFig = recolectables.texture.key;
-    const puntosFig = this.shapes[nombreFig].points;
+  pj( _personaje,recolectables) {
+    const nombreFig = recolectables.getData("tipo");
+    const puntosFig = recolectables.getData("points");
+
     this.score += puntosFig;
+
     this.shapes [nombreFig].count += 1;
     
-    const points= recolectables.getData("points")
+   // const points= recolectables.getData("points")
     
     console.table(this.shapes);
     console.log("score", this.score);
     recolectables.destroy();
 
     this.scoreText.setText(
-      `puntaje: ${this.score} / T: ${this.shapes["triangulo"].count} / C: ${this.shapes["cuadrado"].count} / D: ${this.shapes["diamante"].count}`
+      `puntaje: ${this.score} 
+       T: ${this.shapes["triangulo"].count} 
+       C: ${this.shapes["cuadrado"].count}  
+       D: ${this.shapes["diamante"].count}`
     )
      
     this.checkWin();
@@ -152,15 +158,6 @@ export default class GAME extends Phaser.Scene {
       })
      }
   }
-    
-  
-  //destruccion de objeto
-
-  //floor(recolectables, plataformas){
-   //recolectables.destroy(true,true)
-  //  
-  //      }
-    
   
     
   //timer
@@ -184,6 +181,7 @@ export default class GAME extends Phaser.Scene {
       return;
     }
     const tipos = ["triangulo", "cuadrado", "diamante"];
+
     const tipo = Phaser.Math.RND.pick(tipos);
     let recolectables = this.recolectables.create(
       Phaser.Math.Between(10, 790),
@@ -197,17 +195,17 @@ export default class GAME extends Phaser.Scene {
     recolectables.setBounce(rebote);
 
     //set data
-    recolectables.setData(`points`,this.shapes[tipo].points);
+    recolectables.setData("points",this.shapes[tipo].points);
     recolectables.setData("tipo",tipo);
     }
-   onRecolectableBounced(recolectables, plataformas){
-    let points = recolectables.getData(`points`);
+   onRecolectableBounced(recolectables, _plataformas){
+    let points = recolectables.getData("points");
     points -= 5;
-    recolectables.setData("points", points)
+    recolectables.setData("points", points);
     if (points <= 0) {
-      recolectables.destroy()
+      recolectables.destroy();
     }
-    
+    console.log(this.onRecolectableBounced)
    }
    
 
