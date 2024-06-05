@@ -14,6 +14,7 @@ export default class GAME extends Phaser.Scene {
       triangulo: {points: 10, count: 0 },
       cuadrado: {points: 20, count: 0 },
       diamante: {points: 30, count: 0 },
+      bomba: {points: -10, count: 0}
     }
      // Agregar una propiedad para contar los rebotes
    // this.recolectables.reboundCount = 0;
@@ -29,6 +30,8 @@ export default class GAME extends Phaser.Scene {
     this.load.image("triangulo", "./public/assets/triangle.png")
     this.load.image("plataforma", "./public/assets/platform.png")
     this.load.image("personaje", "./public/assets/Ninja.png")
+    this.load.image("bomba", "./public/assets/bomb.png")
+    
   }
 
   create() {
@@ -180,7 +183,7 @@ export default class GAME extends Phaser.Scene {
     if (this.gameOver){
       return;
     }
-    const tipos = ["triangulo", "cuadrado", "diamante"];
+    const tipos = ["triangulo", "cuadrado", "diamante", "bomba"];
 
     const tipo = Phaser.Math.RND.pick(tipos);
     let recolectables = this.recolectables.create(
